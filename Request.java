@@ -1,15 +1,17 @@
+// Using the same library as main Processing sketch to take the pain out of HTTP requests
+import http.requests.*;
+
 public class Request {
 
-	String test;
+	String uri;
 
-
-	// The privacy of this object ensures it can only be instantiated from the Request class
 	// holds the single instance of the class to prevent multiple hits to the API - static to allow it global scope
 	private static Request instance = null;
 
 	// The constructor is created as Private so that there cannot be any instantiations of the class other than the singleton.
 	private Request() {
-		test = "hello i am a test";
+		// Hit the pokedex endpoint, returning a list of all data on the database as a reference point for further requests
+		uri = "pokedex/1";
 	}
 
 	public static Request getInstance() {
@@ -22,23 +24,15 @@ public class Request {
 		return instance;
 	}
 
-	public void showMessage() {
-		System.out.println(test);
+	public String returnPokedexData() {
+		GetRequest g = new GetRequest("http://pokeapi.co/api/v1/" + uri);
+		g.send();
+
+		// the getContent method innate to the http request library returns the content as a String, so needs to be converted to a JSONObject or HashMap later
+		String pokedexData = g.getContent();
+
+		// return the string containing the whole Pokedex data
+		return pokedexData;
 	}
-
-	// String uri;
-
-	// Request(String _uri) {
-	// 	uri = _uri;
-
-	// 	// Hit the API at the endpoint specified by the constructor argument
-	// 	GetRequest g = new GetRequest("http://pokeapi.co/api/v1/" + uri);
-	// 	g.send();
-
-	// 	println("Response Content: " + g.getContent());
-	// }
-
-	// HashMap hitApi(  ) {
-	// }
 
 }
