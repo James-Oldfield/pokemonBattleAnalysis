@@ -1,5 +1,6 @@
 // http request library dependency 
 import http.requests.*;
+import org.json.*;
 
 Request pokedexReq;
 Pokedex pokedex;
@@ -15,12 +16,12 @@ void draw() {
 
 class Pokedex {
 
-	JSONObject pokedexData;
+	JSON pokedexData;
 
 	Pokedex(String _pokedexData) {
-		pokedexData = _pokedexData;
-		// pokedexData = loadJSONObject(_pokedexData);
-		println(pokedexData.getClass());
+		pokedexData = JSON.parse(_pokedexData);
+
+		println(pokedexData.getJSONObject(0));
 	}
 
 }
