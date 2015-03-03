@@ -1,3 +1,7 @@
+/*
+// Java class implemented using a Singleton design pattern to ensure only ever one instantiation of the class can be made to prevent multiple HTTP requests which would have a detrimental effect on the API limit.
+*/
+
 // Using the same library as main Processing sketch to take the pain out of HTTP requests
 import http.requests.*;
 
@@ -25,6 +29,7 @@ public class Request {
 	}
 
 	public String returnPokedexData() {
+		// NEED TO IMPLEMENT TRY/CATCH ERROR HANDLING
 		GetRequest g = new GetRequest("http://pokeapi.co/api/v1/" + uri);
 		g.send();
 
