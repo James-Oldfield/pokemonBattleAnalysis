@@ -13,12 +13,13 @@ void setup() {
 	size(500, 500);
 	background(0);
 
-	cp5 = new ControlP5(this);
-
-	// pokedexReq = Request.getInstance();
-	// pokedex = new Pokedex(pokedexReq.returnPokedexData());
-
+	cp5     = new ControlP5(this);
 	mainGUI = new GUI();
+
+	pokedexReq = Request.getInstance();
+	pokedex = new Pokedex(pokedexReq.returnPokedexData());
+
+	println(pokedex.findPokemon("charizard"));
 
 }
 
@@ -33,6 +34,29 @@ class Pokedex {
 		// Parse the JSON-formatted string as a JSONObject
 		pokedexData  = JSONObject.parse(_pokedexData);
 		pokedexArray = pokedexData.getJSONArray("pokemon");
+	}
+
+	String findPokemon(String desiredName) {
+
+		JSONObject index;
+		String uri, returnError, nameFound;
+
+		// Loop through entire JSONArray
+		for(int i = 0; i < pokedexArray.size(); i++) {
+			// Get the JSONObject at each index, containing name and the resource_uri needed to hit the API again
+			index = pokedexArray.getJSONObject(i);
+			nameFound = index.getString("name");
+
+			// Does the 'name' value of this JSONObject match what I'm looking for? If so, return the uri needed for that individual pokemon.
+		  if(nameFound.equals(desiredName)) {
+		  	uri = index.getString("resource_uri");
+		    return uri;
+		  }
+		}	
+
+		returnError = "No pokemon found! Did you spell the name right?";
+		return returnError;
+
 	}
 
 }
@@ -62,7 +86,7 @@ class GUI {
 
 	// Add submit button
 		cp5.addBang("submit")
-			.setPosition(loc.x, loc.y + h * 3)
+			.setPosition(loc.x, loc.y + h * 4)
 			.setSize(w/2, h)
 			// plug to references the current class, rather than the default sketch extending PApplet
 			.plugTo(this, "submit")
