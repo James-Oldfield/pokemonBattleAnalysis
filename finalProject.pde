@@ -3,9 +3,9 @@ import http.requests.*;
 // controlP5 for GUI
 import controlP5.*;
 
-Request pokedexReq;
-Pokedex pokedex;
-GUI     mainGUI;
+PokedexReq pokedexReq;
+Pokedex    pokedex;
+GUI        mainGUI;
 
 ControlP5 cp5;
 
@@ -16,10 +16,8 @@ void setup() {
 	cp5     = new ControlP5(this);
 	mainGUI = new GUI();
 
-	pokedexReq = Request.getInstance();
+	pokedexReq = PokedexReq.getInstance();
 	pokedex = new Pokedex(pokedexReq.returnPokedexData());
-
-	println(pokedex.findPokemon("charizard"));
 
 }
 
@@ -74,8 +72,9 @@ class GUI {
 	// GUI Class to instantiate the main home-screen GUI object, takes no parameters and is set up using pre-determined, hard-coded variables declared locally in the class
 	*/
 
-	String  poke1, poke2;
-	PVector loc = new PVector(100, 100);
+	String      poke1Name, poke2Name;
+	PokeRequest poke1Obj,  poke2Obj;
+	PVector     loc = new PVector(100, 100);
 
 	int h = 50, 
       w = 200;
@@ -123,6 +122,72 @@ class GUI {
 	*/
 
 		println("yo submit button!");
+
+		// Pass the entered text into the findPokemon method, and store the returning uri String object in poke1 and poke2 respectively. 
+		poke1Name = pokedex.findPokemon(cp5.get(Textfield.class,"poke1").getText());
+		poke2Name = pokedex.findPokemon(cp5.get(Textfield.class,"poke2").getText());
+
+		poke1Obj  = new PokeRequest(poke1Name);
+
+	}
+
+}
+
+class Request {
+
+	/*
+	// Base HTTP Request super-class in which JSONObject returned is parsed as appropriate according to my program and the PokeAPI.
+	*/
+
+	String uri;
+	JSONObject pokemonData;
+
+	Request(String _uri) {
+		uri = _uri;
+
+		this.returnPokemonData(uri);
+	}
+
+	void returnPokemonData(String uri) {
+
+		/*
+		// Functionality to hit the API at the individual pokemon endpoint, returning the data of the individual pokemon that the user's entered.
+		*/
+
+		// NEED TO IMPLEMENT TRY/CATCH ERROR HANDLING
+		GetRequest g = new GetRequest("http://pokeapi.co/" + uri);
+		g.send();
+
+		// the getContent method innate to the http request library returns the content as a String, so is converted to a JSONObject here
+		pokemonData = JSONObject.parse(g.getContent());
+
+	}
+
+}
+
+class PokeRequest extends Request{
+
+	/*
+	// Extending the basic request class, this class also hits the Sprite endpoint.
+	*/
+
+	PokeRequest(String _uri) {
+		super(_uri);
+
+		this.returnPokemonData(uri);
+		this.createSpriteRequests();
+	}
+
+	void createSpriteRequests() {
+
+		/*
+		// Functionality to create Sprite requests for this pokemon JSONObject returned, as the Sprite endpoint is different to the Pokemon one
+		*/
+
+		// Find the String containing the Sprite URI from the JSONArray and containing JSONObkect  
+		String spriteUri = pokemonData.getJSONArray("sprites").getJSONObject(0).getString("resource_uri");
+
+		println(spriteUri);
 
 	}
 
