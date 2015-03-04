@@ -140,7 +140,6 @@ class Request {
 	*/
 
 	String uri;
-	JSONObject pokemonData;
 
 	Request(String _uri) {
 		uri = _uri;
@@ -148,10 +147,13 @@ class Request {
 		this.returnPokemonData(uri);
 	}
 
-	void returnPokemonData(String uri) {
+	JSONObject returnPokemonData(String uri) {
 
 		/*
-		// Functionality to hit the API at the individual pokemon endpoint, returning the data of the individual pokemon that the user's entered.
+		// Method to hit the API with the given string and return the JSONObject at the endpoint, returned.
+		//
+		// @return JSONObject - Returns the JSONObject returned from the HTTPRequest
+		// @param uri         - String to suffix the end of the base http request.
 		*/
 
 		// NEED TO IMPLEMENT TRY/CATCH ERROR HANDLING
@@ -159,22 +161,27 @@ class Request {
 		g.send();
 
 		// the getContent method innate to the http request library returns the content as a String, so is converted to a JSONObject here
-		pokemonData = JSONObject.parse(g.getContent());
+		JSONObject pokemonData = JSONObject.parse(g.getContent());
+
+		return pokemonData;
 
 	}
 
 }
 
-class PokeRequest extends Request{
+class PokeRequest extends Request {
 
 	/*
-	// Extending the basic request class, this class also hits the Sprite endpoint.
+	// Extending the basic request class, this class also hits the Sprite endpoint of the given pokemon
 	*/
+
+	JSONObject pokemonData;
 
 	PokeRequest(String _uri) {
 		super(_uri);
 
-		this.returnPokemonData(uri);
+		// Initial request with the pokemon name as string, stores the returned JSONObject, used to hit the Sprite endpoint in the next method call
+		pokemonData = this.returnPokemonData(uri);
 		this.createSpriteRequests();
 	}
 
@@ -187,7 +194,8 @@ class PokeRequest extends Request{
 		// Find the String containing the Sprite URI from the JSONArray and containing JSONObkect  
 		String spriteUri = pokemonData.getJSONArray("sprites").getJSONObject(0).getString("resource_uri");
 
-		println(spriteUri);
+		// returns the sprite object for the specified pokemon
+		println(this.returnPokemonData(spriteUri));
 
 	}
 
