@@ -7,6 +7,8 @@ PokedexReq pokedexReq;
 Pokedex    pokedex;
 GUI        mainGUI;
 
+ArrayList<Pokemon> pokemonList = new ArrayList<Pokemon>();
+
 ControlP5 cp5;
 
 void setup() {
@@ -124,6 +126,9 @@ class GUI {
 
 		println("yo submit button!");
 
+		// drawing background to remove previous sprites etc as this whole thing is being called in setup
+		background(0);
+
 		// Pass the entered text into the findPokemon method, and store the returning uri String object in poke1 and poke2 respectively. 
 		poke1Name = pokedex.findPokemon(cp5.get(Textfield.class,"poke1").getText());
 		poke2Name = pokedex.findPokemon(cp5.get(Textfield.class,"poke2").getText());
@@ -204,7 +209,36 @@ class PokeRequest extends Request {
 		// returns the sprite object for the specified pokemon
 		spriteUri = this.returnPokemonData(spriteJSON).getString("image");
 
-		// callback function to draw the sprites
+		// callback function to create a pokemon object from the data returned
+		Pokemon pokemon = new Pokemon("test name", spriteUri, index, 1, 1, 1, 1, 1, 1, 1);
+
+		pokemonList.add(pokemon);
+
+	}
+
+}
+
+class Pokemon {
+
+	/*
+	// Base Pokemon class of the selected pokemon, containing all the individual data returned from the API
+	*/
+
+	private String name, spriteUri;
+	private int    index, attack, defense, hp, sp_atk, sp_def, speed, weight;
+
+	Pokemon(String _name, String _spriteUri, int _index, int _attack, int _defense, int _hp, int _sp_atk, int _sp_def, int _speed, int _weight) {
+		index      = _index;
+		name       = _name;
+	  spriteUri  = _spriteUri;
+		attack     = _attack;
+		defense    = _defense;
+		hp         = _hp;
+		sp_atk     = _sp_atk;
+		sp_def     = _sp_def;
+		speed      = _speed;
+		weight     = _weight;
+
 		this.drawSprites();
 
 	}
@@ -224,8 +258,17 @@ class PokeRequest extends Request {
 		image(sprite, 
 			    mainGUI.loc.x + mainGUI.w + mainGUI.h,
 		      mainGUI.loc.y * index, 
-		      mainGUI.h, mainGUI.h
+		      mainGUI.h, 
+		      mainGUI.h
 		     );
+
+	}
+
+	void drawStats() {
+
+		/*
+		// Functionality to draw the stats of the pokemon chosen
+		*/
 
 	}
 
