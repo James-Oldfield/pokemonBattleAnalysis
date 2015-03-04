@@ -128,7 +128,8 @@ class GUI {
 		poke1Name = pokedex.findPokemon(cp5.get(Textfield.class,"poke1").getText());
 		poke2Name = pokedex.findPokemon(cp5.get(Textfield.class,"poke2").getText());
 
-		poke1Obj  = new PokeRequest(poke1Name);
+		poke1Obj  = new PokeRequest(poke1Name, 1);
+		poke2Obj  = new PokeRequest(poke2Name, 2);
 
 	}
 
@@ -178,9 +179,13 @@ class PokeRequest extends Request {
 
 	private JSONObject pokemonData;
 	private String     spriteUri, spriteJSON;
+	private int        index;
 
-	PokeRequest(String uri) {
+	PokeRequest(String uri, int _index) {
 		super(uri);
+
+		// index will be used to offset the sprites
+		index = _index;
 
 		// Initial request with the pokemon name as string, stores the returned JSONObject, used to hit the Sprite endpoint in the next method call
 		pokemonData = this.returnPokemonData(uri);
@@ -198,6 +203,29 @@ class PokeRequest extends Request {
 
 		// returns the sprite object for the specified pokemon
 		spriteUri = this.returnPokemonData(spriteJSON).getString("image");
+
+		// callback function to draw the sprites
+		this.drawSprites();
+
+	}
+
+	void drawSprites() {
+
+		/*
+		// Functionality draw the sprites using the sprite URL provided from the API sprite endpoint, draws the sprites relative to the GUI using properties of the mainGUI as well as using the index of the image for a y- position.
+		*/
+
+		PImage sprite;
+
+		// load an individual sprite using the returned spriteURI for each pokemon
+		sprite = loadImage("http://pokeapi.co/" + spriteUri);
+
+		// draw the sprite at locations relative to the GUI dimensions
+		image(sprite, 
+			    mainGUI.loc.x + mainGUI.w + mainGUI.h,
+		      mainGUI.loc.y * index, 
+		      mainGUI.h, mainGUI.h
+		     );
 
 	}
 
