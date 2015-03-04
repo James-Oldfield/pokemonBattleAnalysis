@@ -19,6 +19,13 @@ public class Request {
 	}
 
 	public static Request getInstance() {
+
+		/*
+		// Public method which is used for the singleton pattern instantiation
+		// 
+		// @return Request - Returns the singleton-Request object which serves as a reference.
+		*/
+
 		if (instance == null) {
 			// Lazy instantiation - Only being created if it is needed and getInstance method is called
 			instance = new Request();
@@ -29,6 +36,13 @@ public class Request {
 	}
 
 	public String returnPokedexData() {
+
+		/*
+		// Method to return the JSON-formatted string containing all the data of every Pokemon in the Pokedex from the http request.
+		//
+		// @return String - Returns a string in JSON-format of the pokedex data.
+		*/
+
 		// NEED TO IMPLEMENT TRY/CATCH ERROR HANDLING
 		GetRequest g = new GetRequest("http://pokeapi.co/api/v1/" + uri);
 		g.send();

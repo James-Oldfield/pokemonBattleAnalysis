@@ -38,13 +38,21 @@ class Pokedex {
 
 	String findPokemon(String desiredName) {
 
+		/*
+		// Method to search through the pokedex JSONObject returned from the initial HTTPRequest.
+		//
+		// @return String     - Either the desired URI needed for the requested pokemon, or the error message on no match.
+		// @param desiredName - The String name of the Pokemon that is used as a search string to find the right JSONObject for which to return the uri.
+		*/
+
 		JSONObject index;
-		String uri, returnError, nameFound;
+		String uri, nameFound, 
+		       returnError = "No pokemon found! Did you spell the name right?";
 
 		// Loop through entire JSONArray
 		for(int i = 0; i < pokedexArray.size(); i++) {
 			// Get the JSONObject at each index, containing name and the resource_uri needed to hit the API again
-			index = pokedexArray.getJSONObject(i);
+			index     = pokedexArray.getJSONObject(i);
 			nameFound = index.getString("name");
 
 			// Does the 'name' value of this JSONObject match what I'm looking for? If so, return the uri needed for that individual pokemon.
@@ -54,7 +62,6 @@ class Pokedex {
 		  }
 		}	
 
-		returnError = "No pokemon found! Did you spell the name right?";
 		return returnError;
 
 	}
