@@ -12,7 +12,7 @@ ArrayList<Pokemon> pokemonList = new ArrayList<Pokemon>();
 ControlP5 cp5;
 
 void setup() {
-	size(500, 500);
+	size(1000, 500);
 	background(0);
 
 	cp5     = new ControlP5(this);
@@ -183,8 +183,8 @@ class PokeRequest extends Request {
 	*/
 
 	private JSONObject pokemonData;
-	private String     spriteUri, spriteJSON;
-	private int        index;
+	private String     spriteUri, spriteJSON, name;
+	private int        index, attack, defense, hp, sp_atk, sp_def, speed, weight;
 
 	PokeRequest(String uri, int _index) {
 		super(uri);
@@ -205,12 +205,21 @@ class PokeRequest extends Request {
 
 		// Find the String containing the Sprite URI from the JSONArray and containing JSONObkect  
 		spriteJSON = pokemonData.getJSONArray("sprites").getJSONObject(0).getString("resource_uri");
+		name       = pokemonData.getString("name");
 
 		// returns the sprite object for the specified pokemon
-		spriteUri = this.returnPokemonData(spriteJSON).getString("image");
+		spriteUri  = this.returnPokemonData(spriteJSON).getString("image");
+
+		attack     = pokemonData.getInt("attack");
+		defense    = pokemonData.getInt("defense");
+		hp         = pokemonData.getInt("hp");
+		sp_atk     = pokemonData.getInt("sp_atk");
+		sp_def     = pokemonData.getInt("sp_def");
+		speed      = pokemonData.getInt("speed");
+		weight     = pokemonData.getInt("weight");
 
 		// callback function to create a pokemon object from the data returned
-		Pokemon pokemon = new Pokemon("test name", spriteUri, index, 1, 1, 1, 1, 1, 1, 1);
+		Pokemon pokemon = new Pokemon(name, spriteUri, index, attack, defense, hp, sp_atk, sp_def, speed, weight);
 
 		pokemonList.add(pokemon);
 
@@ -228,6 +237,7 @@ class Pokemon {
 	private int    index, attack, defense, hp, sp_atk, sp_def, speed, weight;
 
 	Pokemon(String _name, String _spriteUri, int _index, int _attack, int _defense, int _hp, int _sp_atk, int _sp_def, int _speed, int _weight) {
+
 		index      = _index;
 		name       = _name;
 	  spriteUri  = _spriteUri;
@@ -240,6 +250,7 @@ class Pokemon {
 		weight     = _weight;
 
 		this.drawSprites();
+		this.drawStats();
 
 	}
 
@@ -269,6 +280,19 @@ class Pokemon {
 		/*
 		// Functionality to draw the stats of the pokemon chosen
 		*/
+
+		int fontSize = 15;
+
+		textSize(fontSize);
+		text("Name: "      + name,      mainGUI.loc.x + mainGUI.w * 2, mainGUI.loc.y * index); 
+		text("Attack: "    + attack,    mainGUI.loc.x + mainGUI.w * 2, mainGUI.loc.y * index + fontSize); 
+		text("Defense: "   + defense,   mainGUI.loc.x + mainGUI.w * 2, mainGUI.loc.y * index + fontSize*2); 
+		text("Speed: "     + speed,     mainGUI.loc.x + mainGUI.w * 2, mainGUI.loc.y * index + fontSize*3); 
+		text("HP: "        + hp,        mainGUI.loc.x + mainGUI.w * 2, mainGUI.loc.y * index + fontSize*4); 
+
+		text("Special Attack: "  + sp_atk, mainGUI.loc.x + mainGUI.w * 3, mainGUI.loc.y * index);
+		text("Special Defense: " + sp_def, mainGUI.loc.x + mainGUI.w * 3, mainGUI.loc.y * index + fontSize); 
+		text("Weight: "          + weight, mainGUI.loc.x + mainGUI.w * 3, mainGUI.loc.y * index + fontSize*2); 
 
 	}
 
