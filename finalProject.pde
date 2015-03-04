@@ -25,8 +25,9 @@ void draw() {}
 
 class Pokedex {
 
-	JSONObject pokedexData;
-	JSONArray  pokedexArray;
+	// defined as private so to encapsulate the class 
+	private JSONObject pokedexData;
+	private JSONArray  pokedexArray;
 
 	Pokedex(String _pokedexData) {
 		// Parse the JSON-formatted string as a JSONObject
@@ -72,12 +73,12 @@ class GUI {
 	// GUI Class to instantiate the main home-screen GUI object, takes no parameters and is set up using pre-determined, hard-coded variables declared locally in the class
 	*/
 
-	String      poke1Name, poke2Name;
-	PokeRequest poke1Obj,  poke2Obj;
-	PVector     loc = new PVector(100, 100);
+	private String      poke1Name, poke2Name;
+	private PokeRequest poke1Obj,  poke2Obj;
+	private PVector     loc = new PVector(100, 100);
 
-	int h = 50, 
-      w = 200;
+	private int h = 50, 
+              w = 200;
 
 	GUI() {
 		// automatically call the display method
@@ -139,7 +140,7 @@ class Request {
 	// Base HTTP Request super-class in which JSONObject returned is parsed as appropriate according to my program and the PokeAPI.
 	*/
 
-	String uri;
+	private String uri;
 
 	Request(String _uri) {
 		uri = _uri;
@@ -175,10 +176,11 @@ class PokeRequest extends Request {
 	// Extending the basic request class, this class also hits the Sprite endpoint of the given pokemon
 	*/
 
-	JSONObject pokemonData;
+	private JSONObject pokemonData;
+	private String     spriteUri, spriteJSON;
 
-	PokeRequest(String _uri) {
-		super(_uri);
+	PokeRequest(String uri) {
+		super(uri);
 
 		// Initial request with the pokemon name as string, stores the returned JSONObject, used to hit the Sprite endpoint in the next method call
 		pokemonData = this.returnPokemonData(uri);
@@ -192,10 +194,10 @@ class PokeRequest extends Request {
 		*/
 
 		// Find the String containing the Sprite URI from the JSONArray and containing JSONObkect  
-		String spriteUri = pokemonData.getJSONArray("sprites").getJSONObject(0).getString("resource_uri");
+		spriteJSON = pokemonData.getJSONArray("sprites").getJSONObject(0).getString("resource_uri");
 
 		// returns the sprite object for the specified pokemon
-		println(this.returnPokemonData(spriteUri));
+		spriteUri = this.returnPokemonData(spriteJSON).getString("image");
 
 	}
 
