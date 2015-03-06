@@ -18,12 +18,32 @@ void setup() {
 	cp5     = new ControlP5(this);
 	mainGUI = new GUI();
 
-	pokedexReq = PokedexReq.getInstance();
-	pokedex = new Pokedex(pokedexReq.returnPokedexData());
+	pokedexReq  = PokedexReq.getInstance();
+	tryHttpRequest();
 
 }
 
 void draw() {}
+
+void tryHttpRequest() {
+
+	/*
+	// Functionality with error handling to hit the API of the singleton object, prints out the error if exception if thrown
+	*/
+
+	try {
+		pokedex = new Pokedex(pokedexReq.returnPokedexData());
+		println("connected to API successfully");
+	} catch (Exception e) {
+		e.printStackTrace();
+		g = null;
+	}
+
+	if (g == null) {
+		println("unable to make connection to API, check your internet connection");
+	}
+
+}
 
 class Pokedex {
 

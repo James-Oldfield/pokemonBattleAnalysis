@@ -35,7 +35,7 @@ public class PokedexReq {
 		return instance;
 	}
 
-	public String returnPokedexData() {
+	public String returnPokedexData() throws Exception {
 
 		/*
 		// Method to return the JSON-formatted string containing all the data of every Pokemon in the Pokedex from the http request.
@@ -43,8 +43,9 @@ public class PokedexReq {
 		// @return String - Returns a string in JSON-format of the pokedex data.
 		*/
 
-		// NEED TO IMPLEMENT TRY/CATCH ERROR HANDLING
-		GetRequest g = new GetRequest("http://pokeapi.co/api/v1/" + uri);
+		final GetRequest g;
+
+		g = new GetRequest("http://pokeapi.co/api/v1/" + uri);
 		g.send();
 
 		// the getContent method innate to the http request library returns the content as a String, so needs to be converted to a JSONObject in Processing
