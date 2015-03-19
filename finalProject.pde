@@ -1,3 +1,8 @@
+/*
+ * PROGRAM REQUIRES INTERNET CONNECTION
+ * Example pokemon to enter: "charizard", "blastoise", "dragonite"
+*/
+
 // http request library dependency 
 import http.requests.*;
 // controlP5 for GUI
@@ -7,7 +12,11 @@ PokedexReq pokedexReq;
 Pokedex    pokedex;
 GUI        mainGUI;
 
+// Holds the Pokemon objects of the two pokemon being compared
 ArrayList<Pokemon> pokemonList = new ArrayList<Pokemon>();
+
+// Polymorphic Arraylist to serve reference to every type of request
+ArrayList<Request> requestsList = new ArrayList<Request>();
 
 ControlP5 cp5;
 
@@ -23,7 +32,73 @@ void setup() {
 
 }
 
-void draw() {}
+void draw() {
+		println(pokemonList);
+	// if there has been two pokemon entered for comparison, the comparisons can take place
+	if (pokemonList.size() == 2) {
+		// pass both pokemon into the comparison function
+		println(compareStats(pokemonList.get(0), pokemonList.get(1)));
+	}
+}
+
+HashMap compareStats (Pokemon p0, Pokemon p1) {
+
+	/*
+	 * The compareStats function compares the two pokemon object and returns a HashMap value with the best stats
+	*/
+
+	// HashMap to store the index of the pokemon with the best stats
+	// FORMAT: 'stat type', winning index, difference between values 
+	HashMap<String,Integer> bestStats = new HashMap<String,Integer>();
+
+	// decide which stats are highest, and place the indexs into the HashMap
+	// ATTACK
+	if (p0.attack > p1.attack) { 
+		bestStats.put("attack", 0); 
+	} else { 
+		bestStats.put("attack", 1);	
+	}
+	// DEFENSE
+	if (p0.defense > p1.defense) { 
+		bestStats.put("defense", 0); 
+	} else { 
+		bestStats.put("defense", 1);	
+	}
+	// hp
+	if (p0.hp > p1.hp) { 
+		bestStats.put("hp", 0); 
+	} else { 
+		bestStats.put("hp", 1);	
+	}
+	// sp_atk
+	if (p0.sp_atk > p1.sp_atk) { 
+		bestStats.put("sp_atk", 0); 
+	} else { 
+		bestStats.put("sp_atk", 1);	
+	}
+	// sp_def
+	if (p0.sp_def > p1.sp_def) { 
+		bestStats.put("sp_def", 0); 
+	} else { 
+		bestStats.put("sp_def", 1);	
+	}
+	// speed
+	if (p0.speed > p1.speed) { 
+		bestStats.put("speed", 0); 
+	} else { 
+		bestStats.put("speed", 1);	
+	}
+	// weight
+	if (p0.weight > p1.weight) { 
+		bestStats.put("weight", 0); 
+	} else { 
+		bestStats.put("weight", 1);	
+	}
+
+	// return the HashMap object with containing the String of the stat and the highest stat
+	return bestStats;
+
+}
 
 void tryHttpRequest() {
 
@@ -33,7 +108,6 @@ void tryHttpRequest() {
 
 	try {
 		pokedex = new Pokedex(pokedexReq.returnPokedexData());
-		println("connected to API successfully");
 	} catch (Exception e) {
 		e.printStackTrace();
 		g = null;
@@ -41,6 +115,8 @@ void tryHttpRequest() {
 
 	if (g == null) {
 		println("unable to make connection to API, check your internet connection");
+		// if there is no internet connection, close the program
+		System.exit(0);
 	}
 
 }
@@ -153,17 +229,28 @@ class GUI {
 		poke1Name = pokedex.findPokemon(cp5.get(Textfield.class,"poke1").getText());
 		poke2Name = pokedex.findPokemon(cp5.get(Textfield.class,"poke2").getText());
 
-		poke1Obj  = new PokeRequest(poke1Name, 1);
-		poke2Obj  = new PokeRequest(poke2Name, 2);
+		// if the returned string has a match in the pokedex, make the next request, else throw an error
+		if (!(poke1Name.equals("No pokemon found! Did you spell the name right?"))) {
+			poke1Obj = new PokeRequest(poke1Name, 1);
+		} else {
+			println("There was no Pokemon match found from your first entered Pokemon");
+		}
+
+		// if the returned string has a match in the pokedex, make the next request, else throw an error
+		if (!(poke2Name.equals("No pokemon found! Did you spell the name right?"))) {
+			poke2Obj = new PokeRequest(poke2Name, 2);
+		} else {
+			println("There was no Pokemon match found from your second entered Pokemon");
+		}
 
 	}
 
 }
 
-class Request {
+public abstract class Request {
 
 	/*
-	// Base HTTP Request super-class in which JSONObject returned is parsed as appropriate according to my program and the PokeAPI.
+	// Base HTTP Request super-class in which JSONObject returned is parsed as appropriate according to my program and the PokeAPI. Defined as Abstract to serve the purpose of being the foundation for a subclass, and the Request class cannot be instantiated itself.
 	*/
 
 	private String uri;
@@ -183,7 +270,7 @@ class Request {
 		// @param uri         - String to suffix the end of the base http request.
 		*/
 
-		// NEED TO IMPLEMENT TRY/CATCH ERROR HANDLING
+		// NEED TO IMPLEMENT NATIVE TRY/CATCH ERROR HANDLING
 		GetRequest g = new GetRequest("http://pokeapi.co/" + uri);
 		g.send();
 
@@ -241,6 +328,15 @@ class PokeRequest extends Request {
 		// callback function to create a pokemon object from the data returned
 		Pokemon pokemon = new Pokemon(name, spriteUri, index, attack, defense, hp, sp_atk, sp_def, speed, weight);
 
+		// Add this request to the polymorphic arraylist of requests
+		requestsList.add(this);
+
+		// is the list contains more than 2, delete the first one
+		if (pokemonList.size() > 1) {
+			// Serves as a reference to the current pokemon entered; the last two requests are the pokemon we are concerned about any any point in time.
+			pokemonList.remove(0);
+		}
+
 		pokemonList.add(pokemon);
 
 	}
@@ -277,7 +373,7 @@ class Pokemon {
 	void drawSprites() {
 
 		/*
-		// Functionality draw the sprites using the sprite URL provided from the API sprite endpoint, draws the sprites relative to the GUI using properties of the mainGUI as well as using the index of the image for a y- position.
+		// Functionality to draw the sprites using the sprite URL provided from the API sprite endpoint, draws the sprites relative to the GUI using properties of the mainGUI as well as using the index of the image for a y- position.
 		*/
 
 		PImage sprite;
