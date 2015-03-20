@@ -10,7 +10,8 @@ import controlP5.*;
 
 PokedexReq pokedexReq;
 Pokedex    pokedex;
-GUI        mainGUI;
+HomeGUI    homeGUI;
+MainGUI    mainGUI;
 
 // Holds the Pokemon objects of the two pokemon being compared
 ArrayList<Pokemon> pokemonList = new ArrayList<Pokemon>();
@@ -18,26 +19,64 @@ ArrayList<Pokemon> pokemonList = new ArrayList<Pokemon>();
 // Polymorphic Arraylist to serve reference to every type of request
 ArrayList<Request> requestsList = new ArrayList<Request>();
 
-ControlP5 cp5;
+// Initiate the homescreen on start
+Boolean homeBoolean = true,
+        beenDrawn   = false;
+
+ControlP5 mainCtrl, homeCtrl;
 
 void setup() {
 	size(1000, 500);
 	background(0);
 
-	cp5     = new ControlP5(this);
-	mainGUI = new GUI();
+	homeCtrl = new ControlP5(this);
+	homeGUI  = new HomeGUI();
+	homeCtrl.setAutoDraw(false);
 
+	mainCtrl = new ControlP5(this);
+	mainGUI  = new MainGUI();
+	mainCtrl.setAutoDraw(false);
+
+	// instantiate the singleton object for main request
 	pokedexReq  = PokedexReq.getInstance();
 	tryHttpRequest();
 
 }
 
 void draw() {
-		println(pokemonList);
+
+	if (homeBoolean) {
+		homeGUI.display();
+	} else {
+		mainCtrl.setAutoDraw(true);
+	}
+	
 	// if there has been two pokemon entered for comparison, the comparisons can take place
 	if (pokemonList.size() == 2) {
+
+		if (!beenDrawn) {
+			// draw stats and sprites
+			for (Pokemon p : pokemonList) {
+				p.drawStats();
+				p.drawSprites();
+			}
+		}
+
+		beenDrawn = true;
+
 		// pass both pokemon into the comparison function
-		println(compareStats(pokemonList.get(0), pokemonList.get(1)));
+		HashMap statComparison = compareStats(pokemonList.get(0), pokemonList.get(1));
+
+		// defined here to prevent polluting global var memory space, used to track how many better stats each pokemon has
+		int p0Score=0, p1Score=0;
+
+		// comparison to check the best stats, weight not included as irrelevant 
+		if (Integer.parseInt(statComparison.get("attack").toString()) == 0) { p0Score ++; } else { p1Score ++; }
+		if (Integer.parseInt(statComparison.get("defense").toString()) == 0) { p0Score ++; } else { p1Score ++; }
+		if (Integer.parseInt(statComparison.get("hp").toString()) == 0) { p0Score ++; } else { p1Score ++; }
+		if (Integer.parseInt(statComparison.get("sp_atk").toString()) == 0) { p0Score ++; } else { p1Score ++; }
+		if (Integer.parseInt(statComparison.get("sp_def").toString()) == 0) { p0Score ++; } else { p1Score ++; }
+		if (Integer.parseInt(statComparison.get("speed").toString()) == 0) { p0Score ++; } else { p1Score ++; }
 	}
 }
 
@@ -87,12 +126,6 @@ HashMap compareStats (Pokemon p0, Pokemon p1) {
 		bestStats.put("speed", 0); 
 	} else { 
 		bestStats.put("speed", 1);	
-	}
-	// weight
-	if (p0.weight > p1.weight) { 
-		bestStats.put("weight", 0); 
-	} else { 
-		bestStats.put("weight", 1);	
 	}
 
 	// return the HashMap object with containing the String of the stat and the highest stat
@@ -165,10 +198,50 @@ class Pokedex {
 
 }
 
-class GUI {
+class HomeGUI {
+
+	private PVector cntr = new PVector(width/2, height/2);
+	private PImage homeBGImage;
+
+	HomeGUI () {
+		homeBGImage = loadImage("homeScreen.jpg");
+
+		this.addControls();
+	}
+
+	void addControls () {
+		// Add enter button
+		homeCtrl.addBang("enter")
+			.setPosition(cntr.x+30, cntr.y+100)
+			.setSize(200, 50)
+			// plug to references the current class, rather than the default sketch extending PApplet
+			.plugTo(this, "enter")
+			.getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
+	}
+
+	void display () {
+		image(homeBGImage, 0,0,width,height);
+		homeCtrl.draw();
+	}
+
+	void enter () {
+
+		/*
+		 * enter function is called when the enter button is pressed, as this is plugged using the plugTo method of the controlp5 class
+		*/
+
+		background(0);
+
+		homeBoolean = false;
+
+	}
+
+}
+
+class MainGUI {
 
 	/*
-	// GUI Class to instantiate the main home-screen GUI object, takes no parameters and is set up using pre-determined, hard-coded variables declared locally in the class
+	 * GUI Class to instantiate the main home-screen GUI object, takes no parameters and is set up using pre-determined, hard-coded variables declared locally in the class
 	*/
 
 	private String      poke1Name, poke2Name;
@@ -178,40 +251,47 @@ class GUI {
 	private int h = 50, 
               w = 200;
 
-	GUI() {
-		// automatically call the display method
-		this.display();
+	MainGUI() {
+		this.addControls();
+	}
+
+	void addControls() {
+	// ADD ALL THE CONTROLS
+		// Add submit button
+			mainCtrl.addBang("submit")
+				.setPosition(loc.x, loc.y + h * 4)
+				.setSize(w/2, h)
+				// plug to references the current class, rather than the default sketch extending PApplet
+				.plugTo(this, "submit")
+				.getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);    
+
+		// add pokemon 1 field
+			mainCtrl.addTextfield("poke1")
+				.setPosition(loc.x, loc.y)
+				.setSize(w, h)
+				.setFont(createFont("helvetica",30))
+				.setLabel("pokemon 1")
+				.setAutoClear(false);
+
+		// add pokemon 2 field
+			mainCtrl.addTextfield("poke2")
+				.setPosition(loc.x, loc.y + h*2)
+				.setSize(w, h)
+				.setFont(createFont("helvetica",30))
+				.setLabel("pokemon 2")
+				.setAutoClear(false);
 	}
 
 	void display() {
 
-	/*
-	// Functionality to display the GUI by creating the features
-	*/
+		/*
+		 * Functionality to display the GUI by creating the features
+		*/
 
-	// Add submit button
-		cp5.addBang("submit")
-			.setPosition(loc.x, loc.y + h * 4)
-			.setSize(w/2, h)
-			// plug to references the current class, rather than the default sketch extending PApplet
-			.plugTo(this, "submit")
-			.getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);    
+		// background(0);
 
-	// add pokemon 1 field
-		cp5.addTextfield("poke1")
-			.setPosition(loc.x, loc.y)
-			.setSize(w, h)
-			.setFont(createFont("helvetica",30))
-			.setLabel("pokemon 1")
-			.setAutoClear(false);
+		mainCtrl.draw();
 
-	// add pokemon 2 field
-		cp5.addTextfield("poke2")
-			.setPosition(loc.x, loc.y + h*2)
-			.setSize(w, h)
-			.setFont(createFont("helvetica",30))
-			.setLabel("pokemon 2")
-			.setAutoClear(false);
 	}
 
 	void submit() {
@@ -226,8 +306,8 @@ class GUI {
 		background(0);
 
 		// Pass the entered text into the findPokemon method, and store the returning uri String object in poke1 and poke2 respectively. 
-		poke1Name = pokedex.findPokemon(cp5.get(Textfield.class,"poke1").getText());
-		poke2Name = pokedex.findPokemon(cp5.get(Textfield.class,"poke2").getText());
+		poke1Name = pokedex.findPokemon(mainCtrl.get(Textfield.class,"poke1").getText());
+		poke2Name = pokedex.findPokemon(mainCtrl.get(Textfield.class,"poke2").getText());
 
 		// if the returned string has a match in the pokedex, make the next request, else throw an error
 		if (!(poke1Name.equals("No pokemon found! Did you spell the name right?"))) {
@@ -242,6 +322,8 @@ class GUI {
 		} else {
 			println("There was no Pokemon match found from your second entered Pokemon");
 		}
+
+		beenDrawn = false;
 
 	}
 
@@ -365,9 +447,6 @@ class Pokemon {
 		speed      = _speed;
 		weight     = _weight;
 
-		this.drawSprites();
-		this.drawStats();
-
 	}
 
 	void drawSprites() {
@@ -399,7 +478,10 @@ class Pokemon {
 
 		int fontSize = 15;
 
-		textSize(fontSize);
+		PFont h = createFont("Helvetica", fontSize);
+
+	  textFont(h);
+
 		text("Name: "      + name,      mainGUI.loc.x + mainGUI.w * 2, mainGUI.loc.y * index); 
 		text("Attack: "    + attack,    mainGUI.loc.x + mainGUI.w * 2, mainGUI.loc.y * index + fontSize); 
 		text("Defense: "   + defense,   mainGUI.loc.x + mainGUI.w * 2, mainGUI.loc.y * index + fontSize*2); 
