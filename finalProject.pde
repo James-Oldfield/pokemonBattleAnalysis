@@ -50,7 +50,7 @@ void draw() {
 	} else {
 		mainCtrl.setAutoDraw(true);
 	}
-	
+
 	// if there has been two pokemon entered for comparison, the comparisons can take place
 	if (pokemonList.size() == 2) {
 
@@ -60,77 +60,21 @@ void draw() {
 				p.drawStats();
 				p.drawSprites();
 			}
+
+			String rndmString = mainGUI.suffixList.get( mainGUI.suffixList.size()-1 );
+
+			if (mainGUI.p0Score > mainGUI.p1Score) {
+				text(pokemonList.get(0).name + rndmString + pokemonList.get(1).name, 400, 400, 400, 400);
+			} else if (mainGUI.p0Score == mainGUI.p1Score) {
+				text(pokemonList.get(1).name + " is pretty evenly matched against " + pokemonList.get(0).name, 400, 400, 400, 400);
+			} else {
+				text(pokemonList.get(1).name + rndmString + pokemonList.get(0).name, 400, 400, 400, 400);
+			}
+			
 		}
 
 		beenDrawn = true;
-
-		// pass both pokemon into the comparison function
-		HashMap statComparison = compareStats(pokemonList.get(0), pokemonList.get(1));
-
-		// defined here to prevent polluting global var memory space, used to track how many better stats each pokemon has
-		int p0Score=0, p1Score=0;
-
-		// comparison to check the best stats, weight not included as irrelevant 
-		if (Integer.parseInt(statComparison.get("attack").toString()) == 0) { p0Score ++; } else { p1Score ++; }
-		if (Integer.parseInt(statComparison.get("defense").toString()) == 0) { p0Score ++; } else { p1Score ++; }
-		if (Integer.parseInt(statComparison.get("hp").toString()) == 0) { p0Score ++; } else { p1Score ++; }
-		if (Integer.parseInt(statComparison.get("sp_atk").toString()) == 0) { p0Score ++; } else { p1Score ++; }
-		if (Integer.parseInt(statComparison.get("sp_def").toString()) == 0) { p0Score ++; } else { p1Score ++; }
-		if (Integer.parseInt(statComparison.get("speed").toString()) == 0) { p0Score ++; } else { p1Score ++; }
 	}
-}
-
-HashMap compareStats (Pokemon p0, Pokemon p1) {
-
-	/*
-	 * The compareStats function compares the two pokemon object and returns a HashMap value with the best stats
-	*/
-
-	// HashMap to store the index of the pokemon with the best stats
-	// FORMAT: 'stat type', winning index, difference between values 
-	HashMap<String,Integer> bestStats = new HashMap<String,Integer>();
-
-	// decide which stats are highest, and place the indexs into the HashMap
-	// ATTACK
-	if (p0.attack > p1.attack) { 
-		bestStats.put("attack", 0); 
-	} else { 
-		bestStats.put("attack", 1);	
-	}
-	// DEFENSE
-	if (p0.defense > p1.defense) { 
-		bestStats.put("defense", 0); 
-	} else { 
-		bestStats.put("defense", 1);	
-	}
-	// hp
-	if (p0.hp > p1.hp) { 
-		bestStats.put("hp", 0); 
-	} else { 
-		bestStats.put("hp", 1);	
-	}
-	// sp_atk
-	if (p0.sp_atk > p1.sp_atk) { 
-		bestStats.put("sp_atk", 0); 
-	} else { 
-		bestStats.put("sp_atk", 1);	
-	}
-	// sp_def
-	if (p0.sp_def > p1.sp_def) { 
-		bestStats.put("sp_def", 0); 
-	} else { 
-		bestStats.put("sp_def", 1);	
-	}
-	// speed
-	if (p0.speed > p1.speed) { 
-		bestStats.put("speed", 0); 
-	} else { 
-		bestStats.put("speed", 1);	
-	}
-
-	// return the HashMap object with containing the String of the stat and the highest stat
-	return bestStats;
-
 }
 
 void tryHttpRequest() {
@@ -246,21 +190,28 @@ class MainGUI {
 
 	private String      poke1Name, poke2Name;
 	private PokeRequest poke1Obj,  poke2Obj;
-	private PVector     loc = new PVector(100, 100);
+	private ArrayList<String> suffixList = new ArrayList<String>(); // Holds the words to show in front of the comparison
+	private PVector     loc = new PVector(50, 50);
+	// ints used to track how many better stats each pokemon has
+	private int p0Score=0, p1Score=0;
 
-	private int h = 50, 
+	private int h = 100, 
               w = 200;
 
 	MainGUI() {
 		this.addControls();
+
+		// populate suffix string arrayList
+		suffixList.add(" kicks the ass of ");
+		suffixList.add(" makes easy work of ");
 	}
 
 	void addControls() {
 	// ADD ALL THE CONTROLS
 		// Add submit button
 			mainCtrl.addBang("submit")
-				.setPosition(loc.x, loc.y + h * 4)
-				.setSize(w/2, h)
+				.setPosition(loc.x, loc.y + h * 3)
+				.setSize(w/2, h/2)
 				// plug to references the current class, rather than the default sketch extending PApplet
 				.plugTo(this, "submit")
 				.getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);    
@@ -275,7 +226,7 @@ class MainGUI {
 
 		// add pokemon 2 field
 			mainCtrl.addTextfield("poke2")
-				.setPosition(loc.x, loc.y + h*2)
+				.setPosition(loc.x, loc.y + h*1.5)
 				.setSize(w, h)
 				.setFont(createFont("helvetica",30))
 				.setLabel("pokemon 2")
@@ -324,6 +275,83 @@ class MainGUI {
 		}
 
 		beenDrawn = false;
+
+	// STAT COMPARISON FUNCTIONALITY
+		// pass both pokemon into the comparison function
+		HashMap statComparison = compareStats(pokemonList.get(0), pokemonList.get(1));
+
+		// comparison to check the best stats, weight not included as irrelevant 
+		if (Integer.parseInt(statComparison.get("attack").toString()) == 0) { p0Score ++; } else if (Integer.parseInt(statComparison.get("attack").toString()) == 2) {} else { p1Score ++; }
+		if (Integer.parseInt(statComparison.get("defense").toString()) == 0) { p0Score ++; } else if (Integer.parseInt(statComparison.get("defense").toString()) == 2) {} else { p1Score ++; }
+		if (Integer.parseInt(statComparison.get("hp").toString()) == 0) { p0Score ++; } else if (Integer.parseInt(statComparison.get("hp").toString()) == 2) {} else { p1Score ++; }
+		if (Integer.parseInt(statComparison.get("sp_atk").toString()) == 0) { p0Score ++; } else if (Integer.parseInt(statComparison.get("sp_atk").toString()) == 2) {} else { p1Score ++; }
+		if (Integer.parseInt(statComparison.get("sp_def").toString()) == 0) { p0Score ++; } else if (Integer.parseInt(statComparison.get("sp_def").toString()) == 2) {} else { p1Score ++; }
+		if (Integer.parseInt(statComparison.get("speed").toString()) == 0) { p0Score ++; } else if (Integer.parseInt(statComparison.get("speed").toString()) == 2) {} else { p1Score ++; }
+
+	}
+
+	HashMap compareStats (Pokemon p0, Pokemon p1) {
+
+		/*
+		 * The compareStats function compares the two pokemon object and returns a HashMap value with the best stats
+		*/
+
+		// HashMap to store the index of the pokemon with the best stats
+		// FORMAT: 'stat type', winning index, difference between values 
+		HashMap<String,Integer> bestStats = new HashMap<String,Integer>();
+
+		// decide which stats are highest, and place the indexs into the HashMap
+		// ATTACK
+		if (p0.attack > p1.attack) { 
+			bestStats.put("attack", 0); 
+		} else if (p0.attack == p1.attack) { 
+			bestStats.put("attack", 2);
+		} else {
+			bestStats.put("attack", 1);	
+		}
+		// DEFENSE
+		if (p0.defense > p1.defense) { 
+			bestStats.put("defense", 0); 
+		} else if (p0.defense == p1.defense) { 
+			bestStats.put("defense", 2);
+		} else {
+			bestStats.put("defense", 1);	
+		}
+		// hp
+		if (p0.hp > p1.hp) { 
+			bestStats.put("hp", 0); 
+		} else if (p0.hp == p1.hp) { 
+			bestStats.put("hp", 2);
+		} else {
+			bestStats.put("hp", 1);	
+		}
+		// sp_atk
+		if (p0.sp_atk > p1.sp_atk) { 
+			bestStats.put("sp_atk", 0); 
+		} else if (p0.sp_atk == p1.sp_atk) { 
+			bestStats.put("sp_atk", 2);
+		} else {
+			bestStats.put("sp_atk", 1);	
+		}
+		// sp_def
+		if (p0.sp_def > p1.sp_def) { 
+			bestStats.put("sp_def", 0); 
+		} else if (p0.sp_def == p1.sp_def) { 
+			bestStats.put("sp_def", 2);
+		} else {
+			bestStats.put("sp_def", 1);	
+		}
+		// speed
+		if (p0.speed > p1.speed) { 
+			bestStats.put("speed", 0); 
+		} else if (p0.speed == p1.speed) { 
+			bestStats.put("speed", 2);
+		} else {
+			bestStats.put("speed", 1);	
+		}
+
+		// return the HashMap object with containing the String of the stat and the highest stat
+		return bestStats;
 
 	}
 
@@ -463,7 +491,7 @@ class Pokemon {
 		// draw the sprite at locations relative to the GUI dimensions
 		image(sprite, 
 			    mainGUI.loc.x + mainGUI.w + mainGUI.h,
-		      mainGUI.loc.y * index, 
+		      mainGUI.loc.y + (index + (mainGUI.h/2 * (index-1) * 3)),
 		      mainGUI.h, 
 		      mainGUI.h
 		     );
@@ -482,15 +510,15 @@ class Pokemon {
 
 	  textFont(h);
 
-		text("Name: "      + name,      mainGUI.loc.x + mainGUI.w * 2, mainGUI.loc.y * index); 
-		text("Attack: "    + attack,    mainGUI.loc.x + mainGUI.w * 2, mainGUI.loc.y * index + fontSize); 
-		text("Defense: "   + defense,   mainGUI.loc.x + mainGUI.w * 2, mainGUI.loc.y * index + fontSize*2); 
-		text("Speed: "     + speed,     mainGUI.loc.x + mainGUI.w * 2, mainGUI.loc.y * index + fontSize*3); 
-		text("HP: "        + hp,        mainGUI.loc.x + mainGUI.w * 2, mainGUI.loc.y * index + fontSize*4); 
+		text("Name: "      + name,      mainGUI.loc.x + mainGUI.w * 2.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*35)); 
+		text("Attack: "    + attack,    mainGUI.loc.x + mainGUI.w * 2.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*35) + fontSize); 
+		text("Defense: "   + defense,   mainGUI.loc.x + mainGUI.w * 2.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*35) + fontSize*2); 
+		text("Speed: "     + speed,     mainGUI.loc.x + mainGUI.w * 2.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*35) + fontSize*3); 
+		text("HP: "        + hp,        mainGUI.loc.x + mainGUI.w * 2.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*35) + fontSize*4); 
 
-		text("Special Attack: "  + sp_atk, mainGUI.loc.x + mainGUI.w * 3, mainGUI.loc.y * index);
-		text("Special Defense: " + sp_def, mainGUI.loc.x + mainGUI.w * 3, mainGUI.loc.y * index + fontSize); 
-		text("Weight: "          + weight, mainGUI.loc.x + mainGUI.w * 3, mainGUI.loc.y * index + fontSize*2); 
+		text("Special Attack: "  + sp_atk, mainGUI.loc.x + mainGUI.w * 3.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*35));
+		text("Special Defense: " + sp_def, mainGUI.loc.x + mainGUI.w * 3.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*35) + fontSize); 
+		text("Weight: "          + weight, mainGUI.loc.x + mainGUI.w * 3.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*35) + fontSize*2); 
 
 	}
 
