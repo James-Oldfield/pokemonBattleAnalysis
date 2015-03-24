@@ -8,53 +8,58 @@ import http.requests.*;
 // controlP5 for GUI
 import controlP5.*;
 
-PokedexReq pokedexReq;
-Pokedex    pokedex;
-HomeGUI    homeGUI;
-MainGUI    mainGUI;
+PokedexReq pokedexReq; // Singleton object
+Pokedex    pokedex; // pokedex containing all pokemon 
+HomeScreen homeScreen; // home screen object
 
-// Holds the Pokemon objects of the two pokemon being compared
-ArrayList<Pokemon> pokemonList = new ArrayList<Pokemon>();
+MainGUI mainGUI; // main GUI for searching
 
-// Polymorphic Arraylist to serve reference to every type of request
-ArrayList<Request> requestsList = new ArrayList<Request>();
+ArrayList<Pokemon>      pokemonList   = new ArrayList<Pokemon>(); // Holds the Pokemon objects of the two pokemon being compared
+ArrayList<Request>      requestsList  = new ArrayList<Request>(); // Polymorphic Arraylist to serve reference to every type of request
+HashMap<String,Boolean> programStates = new HashMap<String,Boolean>(); // HashMap to hold Booleans of program states
+ControlP5 mainCtrl, homeCtrl, pDexCtrl, searchCtrl;
 
-// Initiate the homescreen on start
-Boolean homeBoolean = true,
-        beenDrawn   = false;
-
-ControlP5 mainCtrl, homeCtrl;
 
 void setup() {
 	size(1000, 500);
 	background(0);
 
-	homeCtrl = new ControlP5(this);
-	homeGUI  = new HomeGUI();
+	// instantiate the singleton object for main request
+	pokedexReq  = PokedexReq.getInstance();
+	tryHttpRequest();
+
+	// initialise the homeScreen state
+	programStates.put("homeScreen", true);
+	programStates.put("mainScreen", false);
+	programStates.put("beenDrawn", false);
+
+	homeCtrl   = new ControlP5(this);
+	homeScreen = new HomeScreen();
 	homeCtrl.setAutoDraw(false);
+
+	pDexCtrl = new ControlP5(this);
+	pDexCtrl.setAutoDraw(false);
+	searchCtrl = new ControlP5(this);
+	searchCtrl.setAutoDraw(false);
 
 	mainCtrl = new ControlP5(this);
 	mainGUI  = new MainGUI();
 	mainCtrl.setAutoDraw(false);
 
-	// instantiate the singleton object for main request
-	pokedexReq  = PokedexReq.getInstance();
-	tryHttpRequest();
-
 }
 
 void draw() {
 
-	if (homeBoolean) {
-		homeGUI.display();
-	} else {
-		mainCtrl.setAutoDraw(true);
+	if (programStates.get("homeScreen")) {
+		homeScreen.display();
+	} else if (programStates.get("mainScreen")) {
+		mainGUI.display();
 	}
 
 	// if there has been two pokemon entered for comparison, the comparisons can take place
 	if (pokemonList.size() == 2) {
 
-		if (!beenDrawn) {
+		if (!programStates.get("beenDrawn")) {
 			// draw stats and sprites
 			for (Pokemon p : pokemonList) {
 				p.drawStats();
@@ -73,14 +78,14 @@ void draw() {
 			
 		}
 
-		beenDrawn = true;
+		programStates.put("beenDrawn", true);
 	}
 }
 
 void tryHttpRequest() {
 
 	/*
-	// Functionality with error handling to hit the API of the singleton object, prints out the error if exception if thrown
+	 * Functionality with error handling to hit the API of the singleton object, prints out the error if exception if thrown
 	*/
 
 	try {
@@ -103,6 +108,7 @@ class Pokedex {
 	// defined as private so to encapsulate the class 
 	private JSONObject pokedexData;
 	private JSONArray  pokedexArray;
+	private DropdownList pokedexDD;
 
 	Pokedex(String _pokedexData) {
 		// Parse the JSON-formatted string as a JSONObject
@@ -113,10 +119,10 @@ class Pokedex {
 	String findPokemon(String desiredName) {
 
 		/*
-		// Method to search through the pokedex JSONObject returned from the initial HTTPRequest.
-		//
-		// @return String     - Either the desired URI needed for the requested pokemon, or the error message on no match.
-		// @param desiredName - The String name of the Pokemon that is used as a search string to find the right JSONObject for which to return the uri.
+		 * Method to search through the pokedex JSONObject returned from the initial HTTPRequest.
+		 *
+		 * @return String     - Either the desired URI needed for the requested pokemon, or the error message on no match.
+		 * @param desiredName - The String name of the Pokemon that is used as a search string to find the right JSONObject for which to return the uri.
 		*/
 
 		JSONObject index;
@@ -142,12 +148,12 @@ class Pokedex {
 
 }
 
-class HomeGUI {
+class HomeScreen {
 
 	private PVector cntr = new PVector(width/2, height/2);
 	private PImage homeBGImage;
 
-	HomeGUI () {
+	HomeScreen () {
 		homeBGImage = loadImage("homeScreen.jpg");
 
 		this.addControls();
@@ -176,10 +182,11 @@ class HomeGUI {
 
 		background(0);
 
-		homeBoolean = false;
+		// alter program states
+		programStates.put("homeScreen", false);
+		programStates.put("mainScreen", true);
 
 	}
-
 }
 
 class MainGUI {
@@ -190,11 +197,10 @@ class MainGUI {
 
 	private String      poke1Name, poke2Name;
 	private PokeRequest poke1Obj,  poke2Obj;
+	private boolean     pDexMode = false;
 	private ArrayList<String> suffixList = new ArrayList<String>(); // Holds the words to show in front of the comparison
-	private PVector     loc = new PVector(50, 50);
-	// ints used to track how many better stats each pokemon has
-	private int p0Score=0, p1Score=0;
-
+	private int p0Score=0, p1Score=0; // ints used to track how many better stats each pokemon has
+	private PVector loc = new PVector(50, 75); // used for positioning of the GUI objects
 	private int h = 100, 
               w = 200;
 
@@ -208,16 +214,25 @@ class MainGUI {
 
 	void addControls() {
 	// ADD ALL THE CONTROLS
+		mainCtrl.addBang("submit")
 		// Add submit button
-			mainCtrl.addBang("submit")
 				.setPosition(loc.x, loc.y + h * 3)
 				.setSize(w/2, h/2)
-				// plug to references the current class, rather than the default sketch extending PApplet
-				.plugTo(this, "submit")
+				.plugTo(this, "submit") // plugTo acts kind of like a callback function on click, using this in the context of this class, supposed to the top level main sketch class
 				.getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);    
 
+		mainCtrl.addBang("toggle search mode")
+		// add search toggles
+				.setPosition(loc.x, loc.y-50)
+				.setSize(w, h/4)
+				.plugTo(this, "toggleSearchMode")
+				.getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);   
+
+ 		pDexCtrl.addDropdownList("testtesttest")
+      .setPosition(100, 100); 
+
 		// add pokemon 1 field
-			mainCtrl.addTextfield("poke1")
+			searchCtrl.addTextfield("poke1")
 				.setPosition(loc.x, loc.y)
 				.setSize(w, h)
 				.setFont(createFont("helvetica",30))
@@ -225,12 +240,21 @@ class MainGUI {
 				.setAutoClear(false);
 
 		// add pokemon 2 field
-			mainCtrl.addTextfield("poke2")
+			searchCtrl.addTextfield("poke2")
 				.setPosition(loc.x, loc.y + h*1.5)
 				.setSize(w, h)
 				.setFont(createFont("helvetica",30))
 				.setLabel("pokemon 2")
 				.setAutoClear(false);
+	}
+
+	void toggleSearchMode() {
+
+		/*
+		 * Function plugged to the toggle search button, which will change the boolean state of the mainGUI
+		*/
+
+		pDexMode = !pDexMode;
 	}
 
 	void display() {
@@ -239,26 +263,37 @@ class MainGUI {
 		 * Functionality to display the GUI by creating the features
 		*/
 
-		// background(0);
-
+		fill(0);
+		rect(loc.x-10, loc.y, w+10, height);
 		mainCtrl.draw();
+
+		if (!this.pDexMode) {
+			searchCtrl.draw();
+		} else if (this.pDexMode) {
+			pDexCtrl.draw();
+		}
 
 	}
 
 	void submit() {
 
 	/*
-	// Functionality to take place upon the submit button being pressed
+	 * Functionality to take place upon the submit button being pressed
 	*/
 
 		println("yo submit button!");
 
-		// drawing background to remove previous sprites etc as this whole thing is being called in setup
+		// drawing background to remove previous sprites etc
 		background(0);
 
-		// Pass the entered text into the findPokemon method, and store the returning uri String object in poke1 and poke2 respectively. 
-		poke1Name = pokedex.findPokemon(mainCtrl.get(Textfield.class,"poke1").getText());
-		poke2Name = pokedex.findPokemon(mainCtrl.get(Textfield.class,"poke2").getText());
+		// work out which mode is selected
+		if (!this.pDexMode) {
+			// Pass the entered text into the findPokemon method, and store the returning uri String object in poke1 and poke2 respectively. 
+			poke1Name = pokedex.findPokemon(searchCtrl.get(Textfield.class,"poke1").getText());
+			poke2Name = pokedex.findPokemon(searchCtrl.get(Textfield.class,"poke2").getText());
+		} else if (this.pDexMode) {
+			// find names from dropdown
+		}
 
 		// if the returned string has a match in the pokedex, make the next request, else throw an error
 		if (!(poke1Name.equals("No pokemon found! Did you spell the name right?"))) {
@@ -274,7 +309,7 @@ class MainGUI {
 			println("There was no Pokemon match found from your second entered Pokemon");
 		}
 
-		beenDrawn = false;
+		programStates.put("beenDrawn", false);
 
 	// STAT COMPARISON FUNCTIONALITY
 		// pass both pokemon into the comparison function
@@ -456,7 +491,7 @@ class PokeRequest extends Request {
 class Pokemon {
 
 	/*
-	// Base Pokemon class of the selected pokemon, containing all the individual data returned from the API
+	 * Base Pokemon class of the selected pokemon, containing all the individual data returned from the API
 	*/
 
 	private String name, spriteUri;
@@ -480,7 +515,7 @@ class Pokemon {
 	void drawSprites() {
 
 		/*
-		// Functionality to draw the sprites using the sprite URL provided from the API sprite endpoint, draws the sprites relative to the GUI using properties of the mainGUI as well as using the index of the image for a y- position.
+		 * Functionality to draw the sprites using the sprite URL provided from the API sprite endpoint, draws the sprites relative to the GUI using properties of the mainGUI as well as using the index of the image for a y- position.
 		*/
 
 		PImage sprite;
@@ -501,7 +536,7 @@ class Pokemon {
 	void drawStats() {
 
 		/*
-		// Functionality to draw the stats of the pokemon chosen
+		 * Functionality to draw the stats of the pokemon chosen
 		*/
 
 		int fontSize = 15;
@@ -510,15 +545,17 @@ class Pokemon {
 
 	  textFont(h);
 
-		text("Name: "      + name,      mainGUI.loc.x + mainGUI.w * 2.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*35)); 
-		text("Attack: "    + attack,    mainGUI.loc.x + mainGUI.w * 2.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*35) + fontSize); 
-		text("Defense: "   + defense,   mainGUI.loc.x + mainGUI.w * 2.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*35) + fontSize*2); 
-		text("Speed: "     + speed,     mainGUI.loc.x + mainGUI.w * 2.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*35) + fontSize*3); 
-		text("HP: "        + hp,        mainGUI.loc.x + mainGUI.w * 2.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*35) + fontSize*4); 
+	  fill(255);
 
-		text("Special Attack: "  + sp_atk, mainGUI.loc.x + mainGUI.w * 3.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*35));
-		text("Special Defense: " + sp_def, mainGUI.loc.x + mainGUI.w * 3.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*35) + fontSize); 
-		text("Weight: "          + weight, mainGUI.loc.x + mainGUI.w * 3.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*35) + fontSize*2); 
+		text("Name: "      + name,      mainGUI.loc.x + mainGUI.w * 2.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*15)); 
+		text("Attack: "    + attack,    mainGUI.loc.x + mainGUI.w * 2.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*15) + fontSize); 
+		text("Defense: "   + defense,   mainGUI.loc.x + mainGUI.w * 2.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*15) + fontSize*2); 
+		text("Speed: "     + speed,     mainGUI.loc.x + mainGUI.w * 2.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*15) + fontSize*3); 
+		text("HP: "        + hp,        mainGUI.loc.x + mainGUI.w * 2.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*15) + fontSize*4); 
+
+		text("Special Attack: "  + sp_atk, mainGUI.loc.x + mainGUI.w * 3.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*15));
+		text("Special Defense: " + sp_def, mainGUI.loc.x + mainGUI.w * 3.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*15) + fontSize); 
+		text("Weight: "          + weight, mainGUI.loc.x + mainGUI.w * 3.5, mainGUI.loc.y * (index-1) + (mainGUI.loc.y * (index) + index*15) + fontSize*2); 
 
 	}
 
